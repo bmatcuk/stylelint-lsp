@@ -1,0 +1,62 @@
+{
+  "name": "stylelint-lsp",
+  "version": "1.0.0",
+  "description": "A stylelint language server",
+  "keywords": [
+    "stylelint",
+    "lsp",
+    "language server",
+    "multi-root ready"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bmatcuk/stylelint-lsp"
+  },
+  "author": "Bob Matcuk <bmatcuk@gmail.com> (https://squeg.net)",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "prepare": "run-s clean build",
+    "test": "jest --coverage",
+    "watch": "tsc -w -p tsconfig.build.json"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/*.{j,t}s?(x)": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "@types/stylelint": "~9.10.0",
+    "@typescript-eslint/eslint-plugin": "~1.12.0",
+    "@typescript-eslint/parser": "~1.12.0",
+    "eslint": "^5.0.0",
+    "eslint-config-prettier": "~6.0.0",
+    "eslint-plugin-prettier": "~3.1.0",
+    "eslint_d": "~8.0.0",
+    "husky": "~3.0.0",
+    "lint-staged": "~9.2.0",
+    "npm-run-all": "~4.1.5",
+    "prettier": "~1.18.2",
+    "rimraf": "~2.6.3",
+    "typescript": "~3.5.3"
+  },
+  "dependencies": {
+    "fast-diff": "~1.2.0",
+    "resolve-from": "~5.0.0",
+    "stylelint": "~10.1.0",
+    "vscode-languageserver": "~5.2.1"
+  }
+}
