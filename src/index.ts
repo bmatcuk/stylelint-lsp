@@ -35,6 +35,7 @@ connection.onInitialize(param => {
           DisableRuleCommandIds.applyDisableRuleInline,
           DisableRuleCommandIds.applyDisableRuleToFile,
           DisableRuleCommandIds.applyDisableRuleToLine,
+          DisableRuleCommandIds.applyDisableRuleToRange,
         ],
       },
       textDocumentSync: {

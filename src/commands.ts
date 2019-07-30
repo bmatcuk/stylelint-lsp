@@ -12,6 +12,8 @@ import {
   TextDocuments,
   TextEdit,
   VersionedTextDocumentIdentifier,
+  RequestHandler,
+  CodeActionParams,
 } from "vscode-languageserver"
 
 import { CommandIds, CommandTitles, DisableRuleCommandIds } from "./constants"
@@ -20,19 +22,19 @@ import { autoFix, validateDocument } from "./validate"
 import Settings from "./settings"
 
 /** Disable-rule commands when operating on a single line */
-const DISABLE_RULES_FOR_LINE: DisableRuleCommandIds[] = [
+export const DISABLE_RULES_FOR_LINE: DisableRuleCommandIds[] = [
   DisableRuleCommandIds.applyDisableRuleInline,
   DisableRuleCommandIds.applyDisableRuleToLine,
   DisableRuleCommandIds.applyDisableRuleToFile,
 ]
 
 /** Disable-rule commands when operating on a range */
-const DISABLE_RULES_FOR_RANGE: DisableRuleCommandIds[] = [
+export const DISABLE_RULES_FOR_RANGE: DisableRuleCommandIds[] = [
   DisableRuleCommandIds.applyDisableRuleToRange,
   DisableRuleCommandIds.applyDisableRuleToFile,
 ]
 
-const DISABLE_RULES_FOR_WHOLE_FILE: DisableRuleCommandIds[] = [
+export const DISABLE_RULES_FOR_WHOLE_FILE: DisableRuleCommandIds[] = [
   DisableRuleCommandIds.applyDisableRuleToFile,
 ]
 
@@ -41,7 +43,7 @@ const DISABLE_RULES_FOR_WHOLE_FILE: DisableRuleCommandIds[] = [
  * @param line The line of code
  * @returns the indentation
  */
-function getIndent(line: string): string {
+export function getIndent(line: string): string {
   return (line.match(/^\s*/) as [string])[0]
 }
 
@@ -53,7 +55,10 @@ type RuleDisabler = (
 ) => TextEdit[]
 
 /** Functions to create TextEdit(s) to disable a stylelint rule */
-const DISABLE_RULE_TEXT_EDITS: Record<DisableRuleCommandIds, RuleDisabler> = {
+export const DISABLE_RULE_TEXT_EDITS: Record<
+  DisableRuleCommandIds,
+  RuleDisabler
+> = {
   /**
    * TextEdits to create an inline rule disable comment.
    * @param document The TextDocument
@@ -192,39 +197,40 @@ function isDisableRuleCommand(
   )
 }
 
-/**
- * Register Command handlers
- * @param connection The IConnection object
- * @param messageQueue A BufferedMessageQueue
- * @param documents The TextDocuments
- * @param settings The Settings object
- */
-export function registerCommandHandlers(
-  connection: IConnection,
-  messageQueue: BufferedMessageQueue,
+export function shouldApplyToLine(range: Range): boolean {
+  return (
+    range.start.line === range.end.line ||
+    (range.end.character === 0 && range.start.line + 1 === range.end.line)
+  )
+}
+
+export function shouldApplyToWholeFile(
+  range: Range,
+  lineCount: number
+): boolean {
+  return (
+    range.start.line === 0 &&
+    (range.end.line === lineCount - 1 || range.end.line === lineCount)
+  )
+}
+
+export function buildCodeActionHandler(
   documents: TextDocuments,
   settings: Settings
-): void {
-  connection.onCodeAction(params => {
+): RequestHandler<CodeActionParams, (Command | CodeAction)[], void> {
+  return params => {
     // if the document doesn't exist anymore, quit
     const document = documents.get(params.textDocument.uri)
     if (!document) {
-      return
+      return []
     }
 
     // Determine if this is a command request for a
     // single line, the whole file, or a range
     const results: (Command | CodeAction)[] = []
     const { range } = params
-    const applyToLine =
-      range.start.character === 0 &&
-      (range.start.line === range.end.line ||
-        (range.end.character === 0 && range.start.line + 1 === range.end.line))
-    const applyToWholeFile =
-      range.start.line === 0 &&
-      range.start.character === 0 &&
-      (range.end.line === document.lineCount - 1 ||
-        range.end.line === document.lineCount)
+    const applyToLine = shouldApplyToLine(range)
+    const applyToWholeFile = shouldApplyToWholeFile(range, document.lineCount)
 
     let returnSource = true
     let returnQuickFixes = true
@@ -262,10 +268,12 @@ export function registerCommandHandlers(
       const rules = new Map<string, Diagnostic[]>()
       params.context.diagnostics.forEach(diagnostic => {
         if (typeof diagnostic.code === "string" && diagnostic.code !== "") {
-          if (!rules.has(diagnostic.code)) {
-            rules.set(diagnostic.code, [])
+          const diagnostics = rules.get(diagnostic.code)
+          if (diagnostics) {
+            diagnostics.push(diagnostic)
+          } else {
+            rules.set(diagnostic.code, [diagnostic])
           }
-          ;(rules.get(diagnostic.code) as Diagnostic[]).push(diagnostic)
         }
       })
 
@@ -315,72 +323,97 @@ export function registerCommandHandlers(
     }
 
     return results
-  })
+  }
+}
+
+export function buildExecuteCommandHandler(
+  connection: IConnection,
+  messageQueue: BufferedMessageQueue,
+  documents: TextDocuments,
+  settings: Settings
+): RequestHandler<ExecuteCommandParams, any, void> {
+  return async (params: ExecuteCommandParams) => {
+    let document: TextDocument | undefined
+    let label = ""
+    let edits: TextEdit[] = []
+
+    if (isApplyAutoFixesCommand(params)) {
+      const {
+        arguments: [documentIdentifier],
+      } = params
+      document = documents.get(documentIdentifier.uri)
+      if (!document) {
+        return
+      }
+
+      label = CommandTitles[CommandIds.applyAutoFixes]
+
+      const config = await settings.resolve(document)
+      edits = await autoFix(document, config)
+    } else if (isDisableRuleCommand(params)) {
+      // retrieve the params and document
+      const {
+        command,
+        arguments: [documentIdentifier, range, rule],
+      } = params
+      document = documents.get(documentIdentifier.uri)
+      if (!document) {
+        return
+      }
+
+      label = `${CommandTitles[command]}: ${rule}`
+      edits = DISABLE_RULE_TEXT_EDITS[command](document, range, rule)
+    }
+
+    if (document && edits.length) {
+      // build the ApplyWorkspaceEditParams
+      const workspaceEdits = {
+        label,
+        edit: {
+          changes: {
+            [document.uri]: edits,
+          },
+        },
+      }
+
+      // Send the edits to the client
+      const result = await connection.workspace.applyEdit(workspaceEdits)
+      if (result.applied) {
+        // grab the document again 'cause the version probably changed
+        document = documents.get(document.uri)
+        if (document) {
+          validateDocument(messageQueue, document)
+        }
+      } else {
+        let msg = `Could not apply edit "${label}"`
+        if (result.failedChange) {
+          msg = `${msg}: ${result.failedChange}`
+        }
+        connection.console.error(msg)
+      }
+    }
+  }
+}
+
+/**
+ * Register Command handlers
+ * @param connection The IConnection object
+ * @param messageQueue A BufferedMessageQueue
+ * @param documents The TextDocuments
+ * @param settings The Settings object
+ */
+export function registerCommandHandlers(
+  connection: IConnection,
+  messageQueue: BufferedMessageQueue,
+  documents: TextDocuments,
+  settings: Settings
+): void {
+  connection.onCodeAction(buildCodeActionHandler(documents, settings))
 
   // Handle commands
   messageQueue.onRequest(
     ExecuteCommandRequest.type,
-    async (params: ExecuteCommandParams) => {
-      let document: TextDocument | undefined
-      let label = ""
-      let edits: TextEdit[] = []
-
-      if (isApplyAutoFixesCommand(params)) {
-        const {
-          arguments: [documentIdentifier],
-        } = params
-        document = documents.get(documentIdentifier.uri)
-        if (!document) {
-          return
-        }
-
-        label = CommandTitles[CommandIds.applyAutoFixes]
-
-        const config = await settings.resolve(document)
-        edits = await autoFix(document, config)
-      } else if (isDisableRuleCommand(params)) {
-        // retrieve the params and document
-        const {
-          command,
-          arguments: [documentIdentifier, range, rule],
-        } = params
-        document = documents.get(documentIdentifier.uri)
-        if (!document) {
-          return
-        }
-
-        label = `${CommandTitles[command]}: ${rule}`
-        edits = DISABLE_RULE_TEXT_EDITS[command](document, range, rule)
-      }
-
-      if (document && edits.length) {
-        // build the ApplyWorkspaceEditParams
-        const workspaceEdits = {
-          label,
-          edit: {
-            changes: {
-              [document.uri]: edits,
-            },
-          },
-        }
-
-        // Send the edits to the client
-        const result = await connection.workspace.applyEdit(workspaceEdits)
-        if (result.applied) {
-          // grab the document again 'cause the version probably changed
-          document = documents.get(document.uri)
-          if (document) {
-            validateDocument(messageQueue, document)
-          }
-        } else {
-          let msg = `Could not apply edit "${label}"`
-          if (result.failedChange) {
-            msg = `${msg}: ${result.failedChange}`
-          }
-          connection.console.error(msg)
-        }
-      }
-    },
+    buildExecuteCommandHandler(connection, messageQueue, documents, settings),
     ({ arguments: args }: ExecuteCommandParams) =>
       args && args[0] && args[0].version
   )

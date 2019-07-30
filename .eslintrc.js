@@ -74,15 +74,19 @@ module.exports = {
             "error",
             { accessibility: "no-public" },
           ],
+          "@typescript-eslint/no-unused-vars": [
+            "warn",
+            { "argsIgnorePattern": "^_" },
+          ]
         },
       },
     ),
-    // override(
-    //   ["*.test.{j,t}s?(x)"],
-    //   {
-    //     ...require("eslint-plugin-jest").configs.recommended,
-    //     env: { jest: true },
-    //   },
-    // ),
+    override(
+      ["*.test.ts?(x)"],
+      {
+        ...require("eslint-plugin-jest").configs.recommended,
+        env: { jest: true },
+      },
+    ),
   ],
 }

@@ -1,3 +1,7 @@
+[![Release](https://img.shields.io/npm/v/stylelint-lsp.svg)](https://www.npmjs.com/package/stylelint-lsp)
+[![Build Status](https://travis-ci.com/bmatcuk/stylelint-lsp.svg?branch=master)](https://travis-ci.com/bmatcuk/stylelint-lsp)
+[![codecov.io](https://img.shields.io/codecov/c/github/bmatcuk/stylelint-lsp.svg?branch=master)](https://codecov.io/github/bmatcuk/stylelint-lsp?branch=master)
+
 # stylelint-lsp
 stylelint-lsp is an implementation of the [Language Server Protocol] for
 [stylelint]. It supports the following features:

@@ -1,6 +1,6 @@
 {
   "name": "stylelint-lsp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A stylelint language server",
   "keywords": [
     "stylelint",
@@ -39,18 +39,22 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "~24.0.16",
     "@types/stylelint": "~9.10.1",
     "@typescript-eslint/eslint-plugin": "~1.12.0",
     "@typescript-eslint/parser": "~1.12.0",
     "eslint": "^5.0.0",
     "eslint-config-prettier": "~6.0.0",
+    "eslint-plugin-jest": "~22.14.0",
     "eslint-plugin-prettier": "~3.1.0",
     "eslint_d": "~8.0.0",
     "husky": "~3.0.0",
+    "jest": "~24.8.0",
     "lint-staged": "~9.2.0",
     "npm-run-all": "~4.1.5",
     "prettier": "~1.18.2",
     "rimraf": "~2.6.3",
+    "ts-jest": "~24.0.2",
     "typescript": "~3.5.3"
   },
   "dependencies": {

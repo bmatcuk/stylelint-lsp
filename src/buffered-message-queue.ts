@@ -51,7 +51,7 @@ export interface Request<TParam, TReturn> {
  * @returns true if value is a Request
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isRequest(value: any): value is Request<any, any> {
+export function isRequest(value: any): value is Request<any, any> {
   return value && value.resolve && value.reject
 }
 
@@ -245,12 +245,14 @@ export default class BufferedMessageQueue {
             "Request was cancelled."
           )
         )
+        this.next()
         return
       }
 
       // fetch the handler and VersionLens
       const handlerAndLens = this.requestHandlers.get(message.method)
       if (!handlerAndLens) {
+        this.next()
         return
       }
 
@@ -263,6 +265,7 @@ export default class BufferedMessageQueue {
             "Request was cancelled."
           )
         )
+        this.next()
         return
       }
 
@@ -284,12 +287,14 @@ export default class BufferedMessageQueue {
       // notification
       const handlerAndLens = this.notificationHandlers.get(message.method)
       if (!handlerAndLens) {
+        this.next()
         return
       }
 
       const { handler, versionLens } = handlerAndLens
       if (message.documentVersion !== versionLens(message.param)) {
         // Document has changed since the Notification was made; cancel
+        this.next()
         return
       }
 

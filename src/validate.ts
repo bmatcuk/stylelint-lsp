@@ -122,21 +122,21 @@ export async function autoFix(
     if (action === fastDiff.EQUAL) {
       cur += str.length
     } else if (action === fastDiff.DELETE) {
-      if (lastChange && lastChange.start === cur && lastChange.end === cur) {
+      if (lastChange && lastChange.end === cur) {
         // lastChange was an insert at the same position, so we can combine
         // the insert and delete
         lastChange.end += str.length
       } else {
         lastChange = { start: cur, end: cur + str.length, newText: "" }
         changes.push(lastChange)
-        cur += str.length
       }
+      cur += str.length
     } else {
       // INSERT
-      if (lastChange && lastChange.end === cur && lastChange.newText === "") {
+      if (lastChange && lastChange.end === cur) {
         // lastChange was a delete at the same position, so we can combine
         // the insert and delete
-        lastChange.newText = str
+        lastChange.newText += str
       } else {
         lastChange = { start: cur, end: cur, newText: str }
         changes.push(lastChange)
