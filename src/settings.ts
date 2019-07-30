@@ -6,7 +6,7 @@ import {
   TextDocument,
   TextDocumentIdentifier,
 } from "vscode-languageserver"
-import URI from "vscode-uri"
+import { URI } from "vscode-uri"
 import globalStylelint, { LinterOptions } from "stylelint"
 import resolveFrom from "resolve-from"
 import path from "path"

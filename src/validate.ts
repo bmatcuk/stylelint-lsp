@@ -10,7 +10,7 @@ import {
   TextEdit,
   VersionedTextDocumentIdentifier,
 } from "vscode-languageserver"
-import URI from "vscode-uri"
+import { URI } from "vscode-uri"
 import fastDiff from "fast-diff"
 import { LinterResult, LinterOptions } from "stylelint"
 import path from "path"
