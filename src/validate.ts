@@ -110,7 +110,7 @@ export async function autoFix(
     output,
     results: [result],
   } = await lint(document.uri, originalText, settings, true)
-  if (result.ignored) {
+  if (result.ignored || result.errored) {
     return []
   }
 
