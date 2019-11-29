@@ -44,10 +44,37 @@ describe("autoFix", () => {
     expect(result).toEqual([])
   })
 
-  test("no changes", async () => {
+  test("errored", async () => {
+    asMock(stylelint.lint).mockReturnValueOnce(
+      Promise.resolve({
+        errored: true,
+        output: "...",
+        results: [{}],
+      })
+    )
+
+    const result = await autoFix(document, defaultServerSettings)
+    expect(fastDiff).not.toHaveBeenCalled()
+    expect(result).toEqual([])
+  })
+
+  test("no output", async () => {
     asMock(stylelint.lint).mockReturnValueOnce(
       Promise.resolve({
         output: "",
+        results: [{}],
+      })
+    )
+
+    const result = await autoFix(document, defaultServerSettings)
+    expect(fastDiff).not.toHaveBeenCalled()
+    expect(result).toEqual([])
+  })
+
+  test("no changes", async () => {
+    asMock(stylelint.lint).mockReturnValueOnce(
+      Promise.resolve({
+        output: "...",
         results: [{}],
       })
     )
@@ -60,7 +87,7 @@ describe("autoFix", () => {
   test("with changes", async () => {
     asMock(stylelint.lint).mockReturnValueOnce(
       Promise.resolve({
-        output: "",
+        output: "...",
         results: [{}],
       })
     )

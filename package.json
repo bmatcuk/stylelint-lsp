@@ -1,6 +1,6 @@
 {
   "name": "stylelint-lsp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A stylelint language server",
   "keywords": [
     "stylelint",
