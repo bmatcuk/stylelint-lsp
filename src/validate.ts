@@ -107,11 +107,10 @@ export async function autoFix(
 ): Promise<TextEdit[]> {
   const originalText = document.getText()
   const {
-    errored,
     output,
     results: [result],
   } = await lint(document.uri, originalText, settings, true)
-  if (errored || result.ignored || output === "") {
+  if (result.ignored || output === "") {
     return []
   }
 
