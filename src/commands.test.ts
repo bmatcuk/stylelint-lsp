@@ -10,11 +10,11 @@ import {
   Position,
   Range,
   RequestHandler,
-  TextDocument,
   TextDocuments,
   TextEdit,
   createConnection,
 } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument"
 
 import {
   DISABLE_RULES_FOR_LINE,
@@ -28,7 +28,7 @@ import {
   shouldApplyToWholeFile,
 } from "./commands"
 import { DisableRuleCommandIds, CommandIds } from "./constants"
-import { getSupportedCodeActionLiteralsMock } from "./__mocks__/settings"
+import { getSupportedCodeActionLiteralsMock } from "../test/utils"
 import Settings from "./settings"
 import { autoFix, validateDocument } from "./validate"
 const { default: BufferedMessageQueue } = jest.genMockFromModule(
@@ -62,7 +62,7 @@ describe("DISABLE_RULE_TEXT_EDITS", () => {
       uri: "file://path/to/file",
       languageId: "source",
       version: 0,
-      getText: jest.fn(_ => line),
+      getText: jest.fn((_) => line),
       positionAt: jest.fn(),
       offsetAt: jest.fn(),
       lineCount: 10,
@@ -200,7 +200,7 @@ describe("shouldApplyToWholeFile", () => {
 
 describe("buildCodeActionHandler", () => {
   let connection: IConnection
-  let documents: TextDocuments
+  let documents: TextDocuments<TextDocument>
   let settings: Settings
   let onCodeActionHandler: RequestHandler<
     CodeActionParams,
@@ -213,7 +213,7 @@ describe("buildCodeActionHandler", () => {
   let codeActionParam: CodeActionParams
   beforeEach(() => {
     connection = createConnection()
-    documents = new TextDocuments()
+    documents = new TextDocuments<TextDocument>(TextDocument)
     settings = new Settings(connection)
     onCodeActionHandler = buildCodeActionHandler(documents, settings)
 
@@ -259,7 +259,7 @@ describe("buildCodeActionHandler", () => {
       expectedSources = [
         expect.objectContaining({ command: CommandIds.applyAutoFixes }),
       ]
-      expectedQuickFixes = DISABLE_RULES_FOR_WHOLE_FILE.map(command =>
+      expectedQuickFixes = DISABLE_RULES_FOR_WHOLE_FILE.map((command) =>
         expect.objectContaining({ command })
       )
 
@@ -267,7 +267,7 @@ describe("buildCodeActionHandler", () => {
         DISABLE_RULE_TEXT_EDITS
       ) as DisableRuleCommandIds[]
       unexpected = allCommands.filter(
-        command => !DISABLE_RULES_FOR_WHOLE_FILE.includes(command)
+        (command) => !DISABLE_RULES_FOR_WHOLE_FILE.includes(command)
       )
     })
 
@@ -317,7 +317,7 @@ describe("buildCodeActionHandler", () => {
     let expectedSources: any[], expectedQuickFixes: any[], unexpected: any[]
     beforeAll(() => {
       expectedSources = []
-      expectedQuickFixes = DISABLE_RULES_FOR_LINE.map(command =>
+      expectedQuickFixes = DISABLE_RULES_FOR_LINE.map((command) =>
         expect.objectContaining({ command })
       )
 
@@ -325,7 +325,7 @@ describe("buildCodeActionHandler", () => {
         DISABLE_RULE_TEXT_EDITS
       ) as DisableRuleCommandIds[]
       unexpected = allCommands.filter(
-        command => !DISABLE_RULES_FOR_LINE.includes(command)
+        (command) => !DISABLE_RULES_FOR_LINE.includes(command)
       )
     })
 
@@ -370,7 +370,7 @@ describe("buildCodeActionHandler", () => {
     let expectedSources: any[], expectedQuickFixes: any[], unexpected: any[]
     beforeAll(() => {
       expectedSources = []
-      expectedQuickFixes = DISABLE_RULES_FOR_RANGE.map(command =>
+      expectedQuickFixes = DISABLE_RULES_FOR_RANGE.map((command) =>
         expect.objectContaining({ command })
       )
 
@@ -378,7 +378,7 @@ describe("buildCodeActionHandler", () => {
         DISABLE_RULE_TEXT_EDITS
       ) as DisableRuleCommandIds[]
       unexpected = allCommands.filter(
-        command => !DISABLE_RULES_FOR_RANGE.includes(command)
+        (command) => !DISABLE_RULES_FOR_RANGE.includes(command)
       )
     })
 
@@ -434,7 +434,7 @@ describe("buildCodeActionHandler", () => {
       expectedSources = [
         expect.objectContaining({ command: CommandIds.applyAutoFixes }),
       ]
-      expectedQuickFixes = DISABLE_RULES_FOR_WHOLE_FILE.map(command =>
+      expectedQuickFixes = DISABLE_RULES_FOR_WHOLE_FILE.map((command) =>
         expect.objectContaining({ command })
       )
 
@@ -446,7 +446,7 @@ describe("buildCodeActionHandler", () => {
           }),
         }),
       ]
-      expectedQuickFixLiterals = DISABLE_RULES_FOR_WHOLE_FILE.map(_command =>
+      expectedQuickFixLiterals = DISABLE_RULES_FOR_WHOLE_FILE.map((_command) =>
         expect.objectContaining({
           kind: CodeActionKind.QuickFix,
           edit: {
@@ -501,7 +501,7 @@ describe("buildCodeActionHandler", () => {
 describe("buildExecuteCommandHandler", () => {
   let connection: IConnection
   let messageQueue: import("./buffered-message-queue").default
-  let documents: TextDocuments
+  let documents: TextDocuments<TextDocument>
   let settings: Settings
   let onExecuteCommandHandler: RequestHandler<ExecuteCommandParams, any, void>
   let document: TextDocument
@@ -509,7 +509,7 @@ describe("buildExecuteCommandHandler", () => {
   beforeAll(() => {
     connection = createConnection()
     messageQueue = new BufferedMessageQueue(connection)
-    documents = new TextDocuments()
+    documents = new TextDocuments<TextDocument>(TextDocument)
     settings = new Settings(connection)
     onExecuteCommandHandler = buildExecuteCommandHandler(
       connection,
@@ -562,7 +562,7 @@ describe("buildExecuteCommandHandler", () => {
     expect(validateDocument).toHaveBeenCalledTimes(1)
   })
 
-  test.each(Object.keys(DISABLE_RULE_TEXT_EDITS))("%s", async command => {
+  test.each(Object.keys(DISABLE_RULE_TEXT_EDITS))("%s", async (command) => {
     const edits = [textEdit]
     const spy = jest
       .spyOn(DISABLE_RULE_TEXT_EDITS, command as DisableRuleCommandIds)

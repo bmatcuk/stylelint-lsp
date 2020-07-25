@@ -4,7 +4,9 @@ import {
   NotificationType,
   ClientCapabilities,
   DidChangeConfigurationNotification,
+  TextDocumentSyncKind,
 } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument"
 
 import Settings from "./settings"
 import { CommandIds, DisableRuleCommandIds } from "./constants"
@@ -13,7 +15,7 @@ import BufferedMessageQueue from "./buffered-message-queue"
 import { registerValidateHandlers, validateAll } from "./validate"
 
 const connection = createConnection()
-const documents = new TextDocuments()
+const documents = new TextDocuments<TextDocument>(TextDocument)
 documents.listen(connection)
 
 const settings = new Settings(connection)
@@ -22,7 +24,7 @@ registerValidateHandlers(connection, messageQueue, documents, settings)
 registerCommandHandlers(connection, messageQueue, documents, settings)
 
 let clientCapabilities: ClientCapabilities = {}
-connection.onInitialize(param => {
+connection.onInitialize((param) => {
   clientCapabilities = param.capabilities
   settings.initialize(clientCapabilities)
   return {
@@ -40,7 +42,7 @@ connection.onInitialize(param => {
       },
       textDocumentSync: {
         openClose: true,
-        change: documents.syncKind,
+        change: TextDocumentSyncKind.Full,
         willSaveWaitUntil: true,
         save: {
           includeText: false,
@@ -63,12 +65,12 @@ connection.onInitialized(() => {
   }
 })
 
-connection.onDidChangeConfiguration(params => {
+connection.onDidChangeConfiguration((params) => {
   settings.clientConfigurationChanged(params)
   validateAll(messageQueue, documents.all())
 })
 
-documents.onDidClose(event => {
+documents.onDidClose((event) => {
   settings.closeDocument(event.document)
 })
 

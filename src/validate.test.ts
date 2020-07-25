@@ -1,4 +1,5 @@
-import { Position, Range, TextDocument, TextEdit } from "vscode-languageserver"
+import { Position, Range, TextEdit } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument"
 import stylelint from "stylelint"
 import fastDiff from "fast-diff"
 
@@ -23,7 +24,7 @@ const document: TextDocument = {
   languageId: "source",
   version: 0,
   getText: jest.fn(),
-  positionAt: jest.fn(pos => Position.create(0, pos)),
+  positionAt: jest.fn((pos) => Position.create(0, pos)),
   offsetAt: jest.fn(),
   lineCount: 10,
 }

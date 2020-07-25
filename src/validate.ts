@@ -4,12 +4,12 @@ import {
   NotificationType,
   Position,
   Range,
-  TextDocument,
   TextDocumentSaveReason,
   TextDocuments,
   TextEdit,
   VersionedTextDocumentIdentifier,
 } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument"
 import { URI } from "vscode-uri"
 import fastDiff from "fast-diff"
 import { LinterResult, LinterOptions } from "stylelint"
@@ -38,7 +38,7 @@ function lint(
   uri: TextDocument["uri"],
   code: LinterOptions["code"],
   settings: ServerSettings,
-  fix: boolean = false
+  fix = false
 ): Promise<LinterResult> {
   const parsedUri = URI.parse(uri)
   let codeFilename: LinterOptions["codeFilename"] | undefined = undefined
@@ -79,7 +79,7 @@ async function validate(
 
   connection.sendDiagnostics({
     uri: document.uri,
-    diagnostics: result.warnings.map(warning => {
+    diagnostics: result.warnings.map((warning) => {
       const position = Position.create(warning.line - 1, warning.column - 1)
       return {
         code: warning.rule,
@@ -164,7 +164,7 @@ export function validateAll(
   messageQueue: BufferedMessageQueue,
   documents: TextDocument[]
 ): void {
-  documents.forEach(document => {
+  documents.forEach((document) => {
     validateDocument(messageQueue, document)
   })
 }
@@ -172,14 +172,14 @@ export function validateAll(
 export function registerValidateHandlers(
   connection: IConnection,
   messageQueue: BufferedMessageQueue,
-  documents: TextDocuments,
+  documents: TextDocuments<TextDocument>,
   settings: Settings
 ): void {
   const needsValidation = new Set<TextDocument["uri"]>()
 
   messageQueue.onNotification(
     validateNotification,
-    async identifier => {
+    async (identifier) => {
       // the document may have been closed before we had a chance to process it
       const document = documents.get(identifier.uri)
       if (!document) {
@@ -196,17 +196,17 @@ export function registerValidateHandlers(
         })
       }
     },
-    document => document.version
+    (document) => document.version
   )
 
-  documents.onDidOpen(async event => {
+  documents.onDidOpen(async (event) => {
     const config = await settings.resolve(event.document)
     if (config.enable) {
       validateDocument(messageQueue, event.document)
     }
   })
 
-  documents.onDidChangeContent(async params => {
+  documents.onDidChangeContent(async (params) => {
     const config = await settings.resolve(params.document)
     if (
       config.enable &&
@@ -217,7 +217,7 @@ export function registerValidateHandlers(
     }
   })
 
-  documents.onWillSaveWaitUntil(async event => {
+  documents.onWillSaveWaitUntil(async (event) => {
     if (event.reason === TextDocumentSaveReason.AfterDelay) {
       return []
     }
@@ -231,7 +231,7 @@ export function registerValidateHandlers(
     return autoFix(event.document, config)
   })
 
-  documents.onDidSave(async event => {
+  documents.onDidSave(async (event) => {
     const config = await settings.resolve(event.document)
     if (
       config.enable &&
@@ -244,11 +244,11 @@ export function registerValidateHandlers(
     }
   })
 
-  documents.onDidClose(event => {
+  documents.onDidClose((event) => {
     connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] })
   })
 
-  connection.onDocumentFormatting(async params => {
+  connection.onDocumentFormatting(async (params) => {
     const document = documents.get(params.textDocument.uri)
     if (!document) {
       return []
@@ -263,11 +263,11 @@ export function registerValidateHandlers(
     return autoFix(document, config)
   })
 
-  connection.onDidChangeWatchedFiles(async params => {
+  connection.onDidChangeWatchedFiles(async (params) => {
     // The client should be watching for any changes to stylelint config files.
     // If any config files change, we're just going to revalidate all of the
     // documents.
-    const revalidate = params.changes.some(change => {
+    const revalidate = params.changes.some((change) => {
       const uri = URI.parse(change.uri)
       const filename = path.basename(uri.fsPath)
       return STYLELINT_CONFIG_FILES.includes(filename)

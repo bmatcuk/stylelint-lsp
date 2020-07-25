@@ -8,13 +8,13 @@ import {
   IConnection,
   Position,
   Range,
-  TextDocument,
   TextDocuments,
   TextEdit,
   VersionedTextDocumentIdentifier,
   RequestHandler,
   CodeActionParams,
 } from "vscode-languageserver"
+import { TextDocument } from "vscode-languageserver-textdocument"
 
 import { CommandIds, CommandTitles, DisableRuleCommandIds } from "./constants"
 import BufferedMessageQueue from "buffered-message-queue"
@@ -215,10 +215,10 @@ export function shouldApplyToWholeFile(
 }
 
 export function buildCodeActionHandler(
-  documents: TextDocuments,
+  documents: TextDocuments<TextDocument>,
   settings: Settings
 ): RequestHandler<CodeActionParams, (Command | CodeAction)[], void> {
-  return params => {
+  return (params) => {
     // if the document doesn't exist anymore, quit
     const document = documents.get(params.textDocument.uri)
     if (!document) {
@@ -266,7 +266,7 @@ export function buildCodeActionHandler(
     if (returnQuickFixes) {
       // Get a map of rules to the Diagnostics they apply to
       const rules = new Map<string, Diagnostic[]>()
-      params.context.diagnostics.forEach(diagnostic => {
+      params.context.diagnostics.forEach((diagnostic) => {
         if (typeof diagnostic.code === "string" && diagnostic.code !== "") {
           const diagnostics = rules.get(diagnostic.code)
           if (diagnostics) {
@@ -289,7 +289,7 @@ export function buildCodeActionHandler(
 
       // for each rule and command, create the Commands/CodeActions
       rules.forEach((diagnostics, rule) => {
-        disableRuleCommands.forEach(disableKey => {
+        disableRuleCommands.forEach((disableKey) => {
           const title = `${CommandTitles[disableKey]}: ${rule}`
           if (supportsCodeActionLiterals) {
             results.push({
@@ -329,7 +329,7 @@ export function buildCodeActionHandler(
 export function buildExecuteCommandHandler(
   connection: IConnection,
   messageQueue: BufferedMessageQueue,
-  documents: TextDocuments,
+  documents: TextDocuments<TextDocument>,
   settings: Settings
 ): RequestHandler<ExecuteCommandParams, any, void> {
   return async (params: ExecuteCommandParams) => {
@@ -405,7 +405,7 @@ export function buildExecuteCommandHandler(
 export function registerCommandHandlers(
   connection: IConnection,
   messageQueue: BufferedMessageQueue,
-  documents: TextDocuments,
+  documents: TextDocuments<TextDocument>,
   settings: Settings
 ): void {
   connection.onCodeAction(buildCodeActionHandler(documents, settings))
