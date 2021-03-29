@@ -19,6 +19,9 @@
   "files": [
     "dist"
   ],
+  "bin": {
+    "stylelint-lsp": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "clean": "rimraf dist",
