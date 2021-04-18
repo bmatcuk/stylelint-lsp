@@ -16,6 +16,7 @@ save, in response to format requests, or run manually using a command.
 
 ## Client Implementations
 * [coc-stylelintplus]: a client for [coc.nvim]
+* [nvim-lspconfig]: configs for [neovim]'s built-in lsp support
 
 ## Settings
 * **autoFixOnFormat** (default `false`) - automatically apply fixes in response
@@ -48,5 +49,7 @@ Some ideas were borrowed from [vscode-eslint] and [coc-eslint].
 [coc-eslint]: https://github.com/neoclide/coc-eslint
 [coc-stylelintplus]: https://github.com/bmatcuk/coc-stylelintplus
 [coc.nvim]: https://github.com/neoclide/coc.nvim
+[neovim]: https://github.com/neovim/neovim
+[nvim-lspconfig]: https://github.com/neovim/nvim-lspconfig
 [stylelint]: https://microsoft.github.io/language-server-protocol/
 [vscode-eslint]: https://github.com/Microsoft/vscode-eslint
