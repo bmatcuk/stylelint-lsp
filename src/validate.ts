@@ -188,7 +188,11 @@ export function registerValidateHandlers(
 
       const config = await settings.resolve(document)
       if (config.enable) {
-        await validate(connection, document, config)
+        try {
+          await validate(connection, document, config)
+        } catch (error) {
+          console.error(`Error when trying to validate ${document.uri}`, error)
+        }
       } else {
         connection.sendDiagnostics({
           uri: document.uri,
