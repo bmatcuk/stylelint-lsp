@@ -76,20 +76,6 @@ documents.onDidClose((event) => {
   settings.closeDocument(event.document)
 })
 
-const exitNotification = new NotificationType<[number, string?], void>(
-  "stylelint/exit"
-)
-
-// If the process exits, notify the client
-const nodeExit = process.exit
-process.exit = ((code?: number): void => {
-  const stack = new Error("stack")
-  connection.sendNotification(exitNotification, [code ? code : 0, stack.stack])
-  setTimeout(() => {
-    nodeExit(code)
-  }, 1000)
-}) as any /* eslint-disable-line @typescript-eslint/no-explicit-any */
-
 // If there is an uncaught exception, notify the client
 process.on("uncaughtException", (error: Error): void => {
   let message = error.message
