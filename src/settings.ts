@@ -49,17 +49,18 @@ export type ClientSettings = typeof defaultClientSettings
 
 /** Client settings plus server-side settings */
 export interface ServerSettings extends ClientSettings {
-  /** The stylelint instance to use */
-  stylelint: typeof globalStylelint
+  /** linting function */
+  lint: typeof globalStylelint["lint"]
 }
 
 /** Manages settings */
 export default class Settings {
   private connection: IConnection
   private supportsConfigurationRequests: boolean
-  private globalSettings: Thenable<ServerSettings>
+  private globalSettings: ClientSettings
   private documentToSettings: Map<string, Thenable<ServerSettings>>
   private pathToStylelint: Map<string, typeof globalStylelint>
+  private failedDocuments: Set<string>
   private _supportedCodeActionLiterals: CodeActionKind[]
 
   /**
@@ -69,12 +70,10 @@ export default class Settings {
   constructor(connection: IConnection) {
     this.connection = connection
     this.supportsConfigurationRequests = false
-    this.globalSettings = Promise.resolve({
-      ...defaultClientSettings,
-      stylelint: globalStylelint,
-    })
+    this.globalSettings = { ...defaultClientSettings }
     this.documentToSettings = new Map()
     this.pathToStylelint = new Map()
+    this.failedDocuments = new Set()
     this._supportedCodeActionLiterals = []
   }
 
@@ -101,11 +100,14 @@ export default class Settings {
    * @returns ServerSettings for the document
    */
   resolve(document: TextDocumentIdentifier): Thenable<ServerSettings> {
+    const uri = document.uri
     if (!this.supportsConfigurationRequests) {
-      return this.globalSettings
+      return Promise.resolve({
+        ...this.globalSettings,
+        lint: this.lintFunc(uri, globalStylelint),
+      })
     }
 
-    const uri = document.uri
     const cached = this.documentToSettings.get(uri)
     if (cached) {
       return cached
@@ -118,11 +120,42 @@ export default class Settings {
         return {
           ...defaultClientSettings,
           ...settings.stylelintplus,
-          stylelint,
+          lint: this.lintFunc(uri, stylelint),
         }
       })
     this.documentToSettings.set(uri, promise)
     return promise
+  }
+
+  /**
+   * Returns a lint function that skips linting if the specified uri has failed
+   * in the past, and records if it fails in the future.
+   * @param uri The document's uri
+   * @param stylelint The stylelint instance to use
+   * @returns a lint function
+   */
+  private lintFunc(
+    uri: string,
+    stylelint: typeof globalStylelint
+  ): typeof globalStylelint["lint"] {
+    return (...args) => {
+      if (!this.failedDocuments.has(uri)) {
+        try {
+          return stylelint.lint(...args)
+        } catch (error) {
+          // log error and disable stylelint for this uri
+          console.error(`Error when trying to validate ${uri}`, error)
+          this.failedDocuments.add(uri)
+        }
+      }
+
+      // empty results will cause validate/autoFix to do nothing
+      return Promise.resolve({
+        errored: true,
+        output: "",
+        results: [],
+      })
+    }
   }
 
   /**
@@ -160,12 +193,19 @@ export default class Settings {
     if (this.supportsConfigurationRequests) {
       this.documentToSettings.clear()
     } else if (params.settings.stylelintplus) {
-      this.globalSettings = Promise.resolve({
+      this.globalSettings = {
         ...defaultClientSettings,
         ...params.settings.stylelintplus,
-        stylelint: globalStylelint,
-      })
+      }
     }
+  }
+
+  /**
+   * When stylelint configuration files change, clear failedDocuments so we can
+   * retry linting them.
+   */
+  clearFailedDocuments(): void {
+    this.failedDocuments.clear()
   }
 
   /**

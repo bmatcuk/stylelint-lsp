@@ -50,7 +50,7 @@ function lint(
   // formatter to save some processing time. This is especially useful when fix
   // = true because the formatter runs, but then the output is replaced by the
   // fixed CSS, completely wasting the formatter's time.
-  return settings.stylelint.lint({
+  return settings.lint({
     code,
     codeFilename,
     config: settings.config,
@@ -69,7 +69,7 @@ async function validate(
   const {
     results: [result],
   } = await lint(document.uri, document.getText(), settings)
-  if (result.ignored) {
+  if (!result || result.ignored) {
     connection.sendDiagnostics({
       uri: document.uri,
       diagnostics: [],
@@ -110,7 +110,7 @@ export async function autoFix(
     output,
     results: [result],
   } = await lint(document.uri, originalText, settings, true)
-  if (result.ignored || output === "") {
+  if (!result || result.ignored || output === "") {
     return []
   }
 
@@ -188,11 +188,7 @@ export function registerValidateHandlers(
 
       const config = await settings.resolve(document)
       if (config.enable) {
-        try {
-          await validate(connection, document, config)
-        } catch (error) {
-          console.error(`Error when trying to validate ${document.uri}`, error)
-        }
+        await validate(connection, document, config)
       } else {
         connection.sendDiagnostics({
           uri: document.uri,
@@ -278,6 +274,7 @@ export function registerValidateHandlers(
     })
 
     if (revalidate) {
+      settings.clearFailedDocuments()
       validateAll(messageQueue, documents.all())
     }
   })

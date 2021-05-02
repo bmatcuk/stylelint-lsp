@@ -16,7 +16,7 @@ const { default: BufferedMessageQueue } = jest.genMockFromModule(
 
 const defaultServerSettings: ServerSettings = {
   ...defaultClientSettings,
-  stylelint,
+  lint: stylelint.lint,
 }
 
 const document: TextDocument = {

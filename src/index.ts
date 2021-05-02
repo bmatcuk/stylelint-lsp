@@ -3,7 +3,6 @@
 import {
   createConnection,
   TextDocuments,
-  NotificationType,
   ClientCapabilities,
   DidChangeConfigurationNotification,
   TextDocumentSyncKind,

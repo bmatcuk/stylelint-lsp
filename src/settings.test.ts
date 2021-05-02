@@ -24,11 +24,12 @@ afterEach(() => {
 })
 
 describe("resolve", () => {
-  test("does not support configuration requests", () => {
+  test("does not support configuration requests", async () => {
     settings.initialize({})
 
-    const result = settings.resolve(document)
-    expect(result).toBe(settings["globalSettings"])
+    const result = await settings.resolve(document)
+    expect(result).toHaveProperty("lint")
+    expect(result).toMatchObject(settings["globalSettings"])
     expect(connection.workspace.getConfiguration).not.toHaveBeenCalled()
   })
 
@@ -50,7 +51,7 @@ describe("resolve", () => {
     const config = await result
     expect(Object.keys(config)).toEqual([
       ...Object.keys(defaultClientSettings),
-      "stylelint",
+      "lint",
     ])
 
     expect(resolveFrom.silent).toHaveBeenCalledTimes(1)
