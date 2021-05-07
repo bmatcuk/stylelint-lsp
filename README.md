@@ -51,5 +51,5 @@ Some ideas were borrowed from [vscode-eslint] and [coc-eslint].
 [coc.nvim]: https://github.com/neoclide/coc.nvim
 [neovim]: https://github.com/neovim/neovim
 [nvim-lspconfig]: https://github.com/neovim/nvim-lspconfig
-[stylelint]: https://microsoft.github.io/language-server-protocol/
+[stylelint]: https://stylelint.io/
 [vscode-eslint]: https://github.com/Microsoft/vscode-eslint
