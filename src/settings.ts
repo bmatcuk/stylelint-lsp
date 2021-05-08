@@ -138,10 +138,10 @@ export default class Settings {
     uri: string,
     stylelint: typeof globalStylelint
   ): typeof globalStylelint["lint"] {
-    return (...args) => {
+    return async (...args) => {
       if (!this.failedDocuments.has(uri)) {
         try {
-          return stylelint.lint(...args)
+          return await stylelint.lint(...args)
         } catch (error) {
           // log error and disable stylelint for this uri
           console.error(`Error when trying to validate ${uri}`, error)
@@ -150,11 +150,11 @@ export default class Settings {
       }
 
       // empty results will cause validate/autoFix to do nothing
-      return Promise.resolve({
+      return {
         errored: true,
         output: "",
         results: [],
-      })
+      }
     }
   }
 
