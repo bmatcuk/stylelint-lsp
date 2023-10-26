@@ -114,10 +114,14 @@ export default class Settings {
     if (cached) {
       return cached
     }
-
     const promise = this.connection.workspace
       .getConfiguration({ scopeUri: uri, section: "" })
-      .then((settings: { stylelintplus: ClientSettings }) => {
+      .then((settings) => {
+        // NOTE: Make sure config props not defined.
+        settings.stylelintplus.config = undefined
+        settings.stylelintplus.configOverrides = undefined
+        console.log("---", settings.stylelintplus)
+
         const stylelint = this.resolveStylelint(uri)
         return {
           ...defaultClientSettings,
