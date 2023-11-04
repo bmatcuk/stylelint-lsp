@@ -20,11 +20,13 @@ import Settings, { ServerSettings } from "./settings"
 
 const STYLELINT_CONFIG_FILES = [
   ".stylelintignore",
+  "stylelint.config.cjs",
   "stylelint.config.js",
   ".stylelintrc",
   ".stylelintrc.json",
   ".stylelintrc.yaml",
   ".stylelintrc.yml",
+  ".stylelintrc.cjs",
   ".stylelintrc.js",
   "package.json",
 ]
