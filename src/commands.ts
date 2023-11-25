@@ -364,6 +364,13 @@ export function buildExecuteCommandHandler(
     }
 
     if (document && edits.length) {
+      if (!settings.supportsApplyEdit) {
+        connection.console.warn(
+          `${edits.length} edits to apply, but client does not support applying them`
+        )
+        return
+      }
+
       // build the ApplyWorkspaceEditParams
       const workspaceEdits = {
         label,

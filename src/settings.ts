@@ -59,6 +59,7 @@ export default class Settings {
   private pathToStylelint: Map<string, typeof globalStylelint>
   private failedDocuments: Set<string>
   private _supportedCodeActionLiterals: CodeActionKind[]
+  private _supportsApplyEdit: boolean
 
   /**
    * @constructor
@@ -72,6 +73,7 @@ export default class Settings {
     this.pathToStylelint = new Map()
     this.failedDocuments = new Set()
     this._supportedCodeActionLiterals = []
+    this._supportsApplyEdit = false
   }
 
   /**
@@ -89,6 +91,9 @@ export default class Settings {
         ? capabilities.textDocument.codeAction.codeActionLiteralSupport
             .codeActionKind.valueSet
         : []
+    this._supportsApplyEdit = Boolean(
+      capabilities.workspace && capabilities.workspace.applyEdit
+    )
   }
 
   /**
@@ -218,5 +223,9 @@ export default class Settings {
 
   get supportedCodeActionLiterals(): CodeActionKind[] {
     return this._supportedCodeActionLiterals
+  }
+
+  get supportsApplyEdit(): boolean {
+    return this._supportsApplyEdit
   }
 }
