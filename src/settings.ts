@@ -2,12 +2,12 @@ import {
   ClientCapabilities,
   CodeActionKind,
   DidChangeConfigurationParams,
-  IConnection,
-  TextDocument,
+  Connection,
   TextDocumentIdentifier,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
+import { TextDocument } from "vscode-languageserver-textdocument"
 import { URI } from "vscode-uri"
-import globalStylelint, { LinterOptions } from "stylelint"
+import globalStylelint, { LinterOptions, LinterResult } from "stylelint"
 import resolveFrom from "resolve-from"
 import path from "path"
 
@@ -23,16 +23,13 @@ export const defaultClientSettings = {
    * Stylelint config. If neither config nor configFile are specified,
    * stylelint will automatically look for a config file.
    */
-  config: undefined as LinterOptions["config"] | undefined,
+  config: undefined as LinterOptions["config"],
 
   /**
    * Path to a stylelint config. If neither config nor configFile are
    * specified, stylelint will automatically look for a config file.
    */
-  configFile: undefined as LinterOptions["configFile"] | undefined,
-
-  /** stylelint configOverrides, passed directly into lint() */
-  configOverrides: undefined as LinterOptions["configOverrides"] | undefined,
+  configFile: undefined as LinterOptions["configFile"],
 
   /** If false, all validation (including auto-fixing) is disabled */
   enable: true,
@@ -50,12 +47,12 @@ export type ClientSettings = typeof defaultClientSettings
 /** Client settings plus server-side settings */
 export interface ServerSettings extends ClientSettings {
   /** linting function */
-  lint: typeof globalStylelint["lint"]
+  lint: (typeof globalStylelint)["lint"]
 }
 
 /** Manages settings */
 export default class Settings {
-  private connection: IConnection
+  private connection: Connection
   private supportsConfigurationRequests: boolean
   private globalSettings: ClientSettings
   private documentToSettings: Map<string, Thenable<ServerSettings>>
@@ -65,9 +62,9 @@ export default class Settings {
 
   /**
    * @constructor
-   * @param connection The IConnection object
+   * @param connection The Connection object
    */
-  constructor(connection: IConnection) {
+  constructor(connection: Connection) {
     this.connection = connection
     this.supportsConfigurationRequests = false
     this.globalSettings = { ...defaultClientSettings }
@@ -137,7 +134,7 @@ export default class Settings {
   private lintFunc(
     uri: string,
     stylelint: typeof globalStylelint
-  ): typeof globalStylelint["lint"] {
+  ): (typeof globalStylelint)["lint"] {
     return async (...args) => {
       if (!this.failedDocuments.has(uri)) {
         try {
@@ -151,10 +148,13 @@ export default class Settings {
 
       // empty results will cause validate/autoFix to do nothing
       return {
+        cwd: "",
         errored: true,
         output: "",
         results: [],
-      }
+        reportedDisables: [],
+        ruleMetadata: {},
+      } satisfies LinterResult
     }
   }
 

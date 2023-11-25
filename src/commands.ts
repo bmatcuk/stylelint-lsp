@@ -5,7 +5,7 @@ import {
   Diagnostic,
   ExecuteCommandParams,
   ExecuteCommandRequest,
-  IConnection,
+  Connection,
   Position,
   Range,
   TextDocuments,
@@ -13,7 +13,7 @@ import {
   VersionedTextDocumentIdentifier,
   RequestHandler,
   CodeActionParams,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
 import { TextDocument } from "vscode-languageserver-textdocument"
 
 import { CommandIds, CommandTitles, DisableRuleCommandIds } from "./constants"
@@ -241,9 +241,8 @@ export function buildCodeActionHandler(
 
     // auto-fix
     if (returnSource && applyToWholeFile) {
-      const supportsCodeActionLiterals = settings.supportedCodeActionLiterals.includes(
-        CodeActionKind.Source
-      )
+      const supportsCodeActionLiterals =
+        settings.supportedCodeActionLiterals.includes(CodeActionKind.Source)
       const title = CommandTitles[CommandIds.applyAutoFixes]
       const command = Command.create(
         title,
@@ -281,11 +280,10 @@ export function buildCodeActionHandler(
       const disableRuleCommands = applyToLine
         ? DISABLE_RULES_FOR_LINE
         : applyToWholeFile
-        ? DISABLE_RULES_FOR_WHOLE_FILE
-        : DISABLE_RULES_FOR_RANGE
-      const supportsCodeActionLiterals = settings.supportedCodeActionLiterals.includes(
-        CodeActionKind.QuickFix
-      )
+          ? DISABLE_RULES_FOR_WHOLE_FILE
+          : DISABLE_RULES_FOR_RANGE
+      const supportsCodeActionLiterals =
+        settings.supportedCodeActionLiterals.includes(CodeActionKind.QuickFix)
 
       // for each rule and command, create the Commands/CodeActions
       rules.forEach((diagnostics, rule) => {
@@ -327,11 +325,11 @@ export function buildCodeActionHandler(
 }
 
 export function buildExecuteCommandHandler(
-  connection: IConnection,
+  connection: Connection,
   messageQueue: BufferedMessageQueue,
   documents: TextDocuments<TextDocument>,
   settings: Settings
-): RequestHandler<ExecuteCommandParams, any, void> {
+): RequestHandler<ExecuteCommandParams, unknown, void> {
   return async (params: ExecuteCommandParams) => {
     let document: TextDocument | undefined
     let label = ""
@@ -397,13 +395,13 @@ export function buildExecuteCommandHandler(
 
 /**
  * Register Command handlers
- * @param connection The IConnection object
+ * @param connection The Connection object
  * @param messageQueue A BufferedMessageQueue
  * @param documents The TextDocuments
  * @param settings The Settings object
  */
 export function registerCommandHandlers(
-  connection: IConnection,
+  connection: Connection,
   messageQueue: BufferedMessageQueue,
   documents: TextDocuments<TextDocument>,
   settings: Settings

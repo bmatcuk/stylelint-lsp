@@ -1,4 +1,9 @@
-import { Position, Range, TextEdit } from "vscode-languageserver"
+import {
+  Position,
+  Range,
+  TextEdit,
+  createConnection,
+} from "vscode-languageserver/node"
 import { TextDocument } from "vscode-languageserver-textdocument"
 import stylelint from "stylelint"
 import fastDiff from "fast-diff"
@@ -10,9 +15,9 @@ import {
   validateNotification,
 } from "./validate"
 import { ServerSettings, defaultClientSettings } from "./settings"
-const { default: BufferedMessageQueue } = jest.genMockFromModule(
-  "./buffered-message-queue"
-)
+const { default: BufferedMessageQueue } = jest.createMockFromModule<
+  typeof import("./buffered-message-queue")
+>("./buffered-message-queue")
 
 const defaultServerSettings: ServerSettings = {
   ...defaultClientSettings,
@@ -107,7 +112,8 @@ describe("autoFix", () => {
 })
 
 test("validateDocument", () => {
-  const queue = new BufferedMessageQueue()
+  const connection = createConnection()
+  const queue = new BufferedMessageQueue(connection)
   validateDocument(queue, document)
   expect(queue.addNotification).toHaveBeenCalledTimes(1)
   expect(queue.addNotification).toHaveBeenCalledWith(
@@ -118,7 +124,8 @@ test("validateDocument", () => {
 })
 
 test("validateAll", () => {
-  const queue = new BufferedMessageQueue()
+  const connection = createConnection()
+  const queue = new BufferedMessageQueue(connection)
   const documents = [document]
   validateAll(queue, documents)
   expect(queue.addNotification).toHaveBeenCalledTimes(1)

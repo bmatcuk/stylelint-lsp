@@ -1,6 +1,3 @@
 export default {
-  silent: jest
-    .fn()
-    .mockName("resolve-from.silent")
-    .mockReturnValue(null),
+  silent: jest.fn().mockName("resolve-from.silent").mockReturnValue(null),
 }

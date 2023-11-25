@@ -1,11 +1,11 @@
 import {
   CancellationToken,
-  IConnection,
+  Connection,
   NotificationType,
   RequestType,
   ResponseError,
   createConnection,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
 
 import BufferedMessageQueue, {
   isThenable,
@@ -14,12 +14,12 @@ import BufferedMessageQueue, {
   Notification,
 } from "./buffered-message-queue"
 
-const testRequest = new RequestType<void, void, Error, void>("test")
-const testNotification = new NotificationType<void, void>("test")
+const testRequest = new RequestType<void, void, Error>("test")
+const testNotification = new NotificationType<void>("test")
 
 describe("isThenable", () => {
   test("Promise is Thenable", () => {
-    const promise = new Promise(resolve => resolve())
+    const promise = new Promise<void>((resolve) => resolve())
     expect(isThenable(promise)).toBeTruthy()
   })
 })
@@ -36,7 +36,7 @@ describe("isRequest", () => {
 })
 
 describe("BufferedMessageQueue", () => {
-  let connection: IConnection
+  let connection: Connection
   let queue: BufferedMessageQueue
   beforeEach(() => {
     connection = createConnection()
@@ -44,7 +44,11 @@ describe("BufferedMessageQueue", () => {
   })
 
   test("onRequest", () => {
-    queue.onRequest(testRequest, () => {}, () => 0)
+    queue.onRequest(
+      testRequest,
+      () => {},
+      () => 0
+    )
     expect(connection.onRequest).toHaveBeenCalledTimes(1)
     expect(connection.onRequest).toHaveBeenCalledWith(
       testRequest,
@@ -53,7 +57,11 @@ describe("BufferedMessageQueue", () => {
   })
 
   test("onNotification", () => {
-    queue.onNotification(testNotification, () => {}, () => 0)
+    queue.onNotification(
+      testNotification,
+      () => {},
+      () => 0
+    )
     expect(connection.onNotification).toHaveBeenCalledTimes(1)
     expect(connection.onNotification).toHaveBeenCalledWith(
       testNotification,
@@ -77,7 +85,7 @@ describe("BufferedMessageQueue", () => {
 
   describe("next", () => {
     beforeEach(() => {
-      jest.useFakeTimers()
+      jest.useFakeTimers({ legacyFakeTimers: true })
       queue["queue"].push({
         method: testNotification.method,
         param: undefined,

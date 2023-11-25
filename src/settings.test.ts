@@ -1,8 +1,8 @@
 import {
   createConnection,
-  TextDocument,
   ClientCapabilities,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
+import { TextDocument } from "vscode-languageserver-textdocument"
 import resolveFrom from "resolve-from"
 
 import Settings, { defaultClientSettings } from "./settings"

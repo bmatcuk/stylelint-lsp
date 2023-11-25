@@ -1,17 +1,16 @@
 import {
   CancellationToken,
-  ErrorCodes,
+  Connection,
   GenericNotificationHandler,
   GenericRequestHandler,
-  IConnection,
+  LSPErrorCodes,
   NotificationHandler,
   NotificationType,
-  RPCMessageType,
   RequestHandler,
   RequestType,
   ResponseError,
   VersionedTextDocumentIdentifier,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
 
 /**
  * Tests if a variable is Thenable
@@ -26,7 +25,7 @@ export function isThenable<T>(value: any): value is Thenable<T> {
 /** A queued Request */
 export interface Request<TParam, TReturn> {
   /** Method of the Request */
-  method: RPCMessageType["method"]
+  method: RequestType<unknown, unknown, unknown>["method"]
 
   /** Param sent to the Request handler */
   param: TParam
@@ -58,7 +57,7 @@ export function isRequest(value: any): value is Request<any, any> {
 /** A queued Notification */
 export interface Notification<TParam> {
   /** Method of the Notification */
-  method: RPCMessageType["method"]
+  method: NotificationType<unknown>["method"]
 
   /** Param sent to the Notification handler */
   param: TParam
@@ -117,7 +116,7 @@ export type NotificationHandlerMap = Map<
  * cancelled or ignored.
  */
 export default class BufferedMessageQueue {
-  private connection: IConnection
+  private connection: Connection
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private queue: Message<any, any>[]
   private requestHandlers: RequestHandlerMap
@@ -126,9 +125,9 @@ export default class BufferedMessageQueue {
 
   /**
    * @constructor
-   * @param connection An IConnection object
+   * @param connection An Connection object
    */
-  constructor(connection: IConnection) {
+  constructor(connection: Connection) {
     this.connection = connection
     this.queue = []
     this.requestHandlers = new Map()
@@ -141,8 +140,8 @@ export default class BufferedMessageQueue {
    * @param handler The Request handler
    * @param versionLens A VersionLens for the Request
    */
-  onRequest<TParam, TReturn, TError, TR0>(
-    type: RequestType<TParam, TReturn, TError, TR0>,
+  onRequest<TParam, TReturn, TError>(
+    type: RequestType<TParam, TReturn, TError>,
     handler: RequestHandler<TParam, TReturn, TError>,
     versionLens: VersionLens<TParam>
   ): void {
@@ -177,13 +176,13 @@ export default class BufferedMessageQueue {
    * @param handler The Notification handler
    * @param versionLens A VersionLens for the Notification
    */
-  onNotification<TParam, TR0>(
-    type: NotificationType<TParam, TR0>,
+  onNotification<TParam>(
+    type: NotificationType<TParam>,
     handler: NotificationHandler<TParam>,
     versionLens: VersionLens<TParam>
   ): void {
     // register a handler with the underlying connection
-    this.connection.onNotification(type, param => {
+    this.connection.onNotification(type, (param) => {
       this.addNotification(type, param, versionLens(param))
     })
 
@@ -200,8 +199,8 @@ export default class BufferedMessageQueue {
    * @param param The param for the Notification
    * @param documentVersion The current document version
    */
-  addNotification<TParam, TR0>(
-    type: NotificationType<TParam, TR0>,
+  addNotification<TParam>(
+    type: NotificationType<TParam>,
     param: TParam,
     documentVersion: VersionedTextDocumentIdentifier["version"]
   ): void {
@@ -241,7 +240,7 @@ export default class BufferedMessageQueue {
         // Request was cancelled before we could process it
         message.reject(
           new ResponseError(
-            ErrorCodes.RequestCancelled,
+            LSPErrorCodes.RequestCancelled,
             "Request was cancelled."
           )
         )
@@ -261,7 +260,7 @@ export default class BufferedMessageQueue {
         // Document has changed since the Request was made; cancel
         message.reject(
           new ResponseError(
-            ErrorCodes.RequestCancelled,
+            LSPErrorCodes.RequestCancelled,
             "Request was cancelled."
           )
         )
@@ -273,10 +272,10 @@ export default class BufferedMessageQueue {
       const result = handler(message.param, message.token)
       if (isThenable(result)) {
         result.then(
-          value => {
+          (value) => {
             message.resolve(value)
           },
-          error => {
+          (error) => {
             message.reject(error)
           }
         )

@@ -1,6 +1,6 @@
 import {
   DiagnosticSeverity,
-  IConnection,
+  Connection,
   NotificationType,
   Position,
   Range,
@@ -8,7 +8,7 @@ import {
   TextDocuments,
   TextEdit,
   VersionedTextDocumentIdentifier,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
 import { TextDocument } from "vscode-languageserver-textdocument"
 import { URI } from "vscode-uri"
 import fastDiff from "fast-diff"
@@ -31,10 +31,8 @@ const STYLELINT_CONFIG_FILES = [
   "package.json",
 ]
 
-export const validateNotification = new NotificationType<
-  VersionedTextDocumentIdentifier,
-  void
->("stylelint/validate")
+export const validateNotification =
+  new NotificationType<VersionedTextDocumentIdentifier>("stylelint/validate")
 
 function lint(
   uri: TextDocument["uri"],
@@ -57,14 +55,13 @@ function lint(
     codeFilename,
     config: settings.config,
     configFile: settings.configFile,
-    configOverrides: settings.configOverrides,
     fix,
     formatter: () => "",
   })
 }
 
 async function validate(
-  connection: IConnection,
+  connection: Connection,
   document: TextDocument,
   settings: ServerSettings
 ): Promise<void> {
@@ -172,7 +169,7 @@ export function validateAll(
 }
 
 export function registerValidateHandlers(
-  connection: IConnection,
+  connection: Connection,
   messageQueue: BufferedMessageQueue,
   documents: TextDocuments<TextDocument>,
   settings: Settings

@@ -12,17 +12,15 @@ export enum DisableRuleCommandIds {
 }
 
 /** Titles of the commands */
-export const CommandTitles: Record<
-  CommandIds | DisableRuleCommandIds,
-  string
-> = {
-  [CommandIds.applyAutoFixes]: "Apply all stylelint fixes",
-  [DisableRuleCommandIds.applyDisableRuleInline]:
-    "Disable stylelint rule inline",
-  [DisableRuleCommandIds.applyDisableRuleToLine]:
-    "Disable stylelint rule on this line",
-  [DisableRuleCommandIds.applyDisableRuleToFile]:
-    "Disable stylelint rule for entire file",
-  [DisableRuleCommandIds.applyDisableRuleToRange]:
-    "Disable stylelint rule for selection",
-}
+export const CommandTitles: Record<CommandIds | DisableRuleCommandIds, string> =
+  {
+    [CommandIds.applyAutoFixes]: "Apply all stylelint fixes",
+    [DisableRuleCommandIds.applyDisableRuleInline]:
+      "Disable stylelint rule inline",
+    [DisableRuleCommandIds.applyDisableRuleToLine]:
+      "Disable stylelint rule on this line",
+    [DisableRuleCommandIds.applyDisableRuleToFile]:
+      "Disable stylelint rule for entire file",
+    [DisableRuleCommandIds.applyDisableRuleToRange]:
+      "Disable stylelint rule for selection",
+  }

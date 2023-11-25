@@ -24,7 +24,6 @@ save, in response to format requests, or run manually using a command.
 * **autoFixOnSave** (default `false`) - automatically apply fixes on save.
 * **config** (default `null`) - stylelint config to use.
 * **configFile** (default `null`) - path to stylelint config file.
-* **configOverrides** (default `null`) - stylelint config overrides.
 * **enable** (default `true`) - if false, disable linting and auto-formatting.
 * **validateOnSave** (default `false`) - lint on save.
 * **validateOnType** (default `true`) - lint after changes.
@@ -41,6 +40,9 @@ explicitly turn on **validateOnSave** if you are using another editor extension
 that will make changes to the file on save, otherwise, diagnostic messages from
 stylelint may be out-of-date after a save (ie, may point to the wrong line or
 may have been fixed by the automatic changes on save, etc).
+
+Note that v2 of stylelint-lsp no longer supports **configOverrides** because
+the latest version of stylelint no longer supports it.
 
 ## Inspiration
 Some ideas were borrowed from [vscode-eslint] and [coc-eslint].

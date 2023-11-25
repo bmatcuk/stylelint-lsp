@@ -4,16 +4,16 @@ import {
   CodeActionKind,
   CodeActionParams,
   Command,
+  Connection,
   Diagnostic,
   ExecuteCommandParams,
-  IConnection,
   Position,
   Range,
   RequestHandler,
   TextDocuments,
   TextEdit,
   createConnection,
-} from "vscode-languageserver"
+} from "vscode-languageserver/node"
 import { TextDocument } from "vscode-languageserver-textdocument"
 
 import {
@@ -31,9 +31,9 @@ import { DisableRuleCommandIds, CommandIds } from "./constants"
 import { getSupportedCodeActionLiteralsMock } from "../test/utils"
 import Settings from "./settings"
 import { autoFix, validateDocument } from "./validate"
-const { default: BufferedMessageQueue } = jest.genMockFromModule(
-  "./buffered-message-queue"
-)
+const { default: BufferedMessageQueue } = jest.createMockFromModule<
+  typeof import("./buffered-message-queue")
+>("./buffered-message-queue")
 jest.mock("./settings")
 jest.mock("./validate")
 
@@ -199,7 +199,7 @@ describe("shouldApplyToWholeFile", () => {
 })
 
 describe("buildCodeActionHandler", () => {
-  let connection: IConnection
+  let connection: Connection
   let documents: TextDocuments<TextDocument>
   let settings: Settings
   let onCodeActionHandler: RequestHandler<
@@ -424,12 +424,13 @@ describe("buildCodeActionHandler", () => {
   })
 
   describe("supports code action literals", () => {
-    // eslint-disable @typescript-eslint/no-explicit-any
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     let expectedSources: any[]
     let expectedQuickFixes: any[]
     let expectedSourceLiterals: any[]
     let expectedQuickFixLiterals: any[]
-    // eslint-enable @typescript-eslint/no-explicit-any
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
     beforeAll(() => {
       expectedSources = [
         expect.objectContaining({ command: CommandIds.applyAutoFixes }),
@@ -499,11 +500,15 @@ describe("buildCodeActionHandler", () => {
 })
 
 describe("buildExecuteCommandHandler", () => {
-  let connection: IConnection
+  let connection: Connection
   let messageQueue: import("./buffered-message-queue").default
   let documents: TextDocuments<TextDocument>
   let settings: Settings
-  let onExecuteCommandHandler: RequestHandler<ExecuteCommandParams, any, void>
+  let onExecuteCommandHandler: RequestHandler<
+    ExecuteCommandParams,
+    unknown,
+    void
+  >
   let document: TextDocument
   let textEdit: TextEdit
   beforeAll(() => {
