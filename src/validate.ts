@@ -80,10 +80,15 @@ async function validate(
     uri: document.uri,
     diagnostics: result.warnings.map((warning) => {
       const position = Position.create(warning.line - 1, warning.column - 1)
+      const endPosition =
+        typeof warning.endLine === "number" &&
+        typeof warning.endColumn === "number"
+          ? Position.create(warning.endLine - 1, warning.endColumn - 1)
+          : position
       return {
         code: warning.rule,
         message: warning.text,
-        range: Range.create(position, position),
+        range: Range.create(position, endPosition),
         severity:
           warning.severity === "warning"
             ? DiagnosticSeverity.Warning

@@ -26,6 +26,12 @@ export default jest
         .mockName("Settings.supportedCodeActionLiterals")
         .mockReturnValue([]),
     })
+    Object.defineProperty(settings, "supportsApplyEdit", {
+      get: jest
+        .fn()
+        .mockName("Settings.supportsApplyEdit")
+        .mockReturnValue(true),
+    })
     return settings
   })
   .mockName("Settings")
