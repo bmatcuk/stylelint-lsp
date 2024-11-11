@@ -1,5 +1,5 @@
 [![Release](https://img.shields.io/npm/v/stylelint-lsp.svg)](https://www.npmjs.com/package/stylelint-lsp)
-[![Build Status](https://travis-ci.com/bmatcuk/stylelint-lsp.svg?branch=master)](https://travis-ci.com/bmatcuk/stylelint-lsp)
+[![Build Status](https://github.com/bmatcuk/stylelint-lsp/actions/workflows/test.yml/badge.svg)](https://github.com/bmatcuk/stylelint-lsp/actions)
 [![codecov.io](https://img.shields.io/codecov/c/github/bmatcuk/stylelint-lsp.svg?branch=master)](https://codecov.io/github/bmatcuk/stylelint-lsp?branch=master)
 
 # stylelint-lsp
