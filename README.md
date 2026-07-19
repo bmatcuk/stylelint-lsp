@@ -17,7 +17,8 @@ save, in response to format requests, or run manually using a command.
 ## Client Implementations
 * [coc-stylelintplus]: a client for [coc.nvim]
 * [nvim-lspconfig]: configs for [neovim]'s built-in lsp support
-
+* [LSP4IJ](https://github.com/redhat-developer/lsp4ij/blob/main/docs/user-defined-ls/stylelint-lsp.md): a free LSP client support for all JetBrains products (IntelliJ, PyCharm, CLion, etc).
+  
 ## Settings
 * **autoFixOnFormat** (default `false`) - automatically apply fixes in response
   to format requests.
